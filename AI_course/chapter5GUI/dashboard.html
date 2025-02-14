@@ -1,0 +1,141 @@
+import streamlit as st
+import mysql.connector
+
+# Function to authenticate user credentials from the database
+def authenticate_user(username, password):
+    try:
+        # Connect to the MySQL database
+        connection = mysql.connector.connect(
+            host="sql6.freemysqlhosting.net",
+            database="sql6695317",
+            user="sql6695317",
+            password="xWY2aLxsMw"
+        )
+
+        # Create a cursor object to execute SQL queries
+        cursor = connection.cursor()
+
+        # Query to check if the username and password match
+        query = "SELECT * FROM users WHERE username = %s AND password = %s"
+        cursor.execute(query, (username, password))
+        user = cursor.fetchone()  # Fetch the first row
+
+        # If user exists, return True (authentication successful)
+        if user:
+            return True
+        else:
+            return False
+
+    except mysql.connector.Error as error:
+        st.error(f"Error: {error}")
+        return False
+
+    finally:
+        # Close the cursor and database connection
+        if 'connection' in locals() and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+# Function to check if a username already exists in the database
+def username_exists(username):
+    try:
+        # Connect to the MySQL database
+        connection = mysql.connector.connect(
+            host="sql6.freemysqlhosting.net",
+            database="sql6695317",
+            user="sql6695317",
+            password="xWY2aLxsMw"
+        )
+
+        # Create a cursor object to execute SQL queries
+        cursor = connection.cursor()
+
+        # Query to check if the username exists
+        query = "SELECT * FROM users WHERE username = %s"
+        cursor.execute(query, (username,))
+        user = cursor.fetchone()  # Fetch the first row
+
+        # If user exists, return True
+        if user:
+            return True
+        else:
+            return False
+
+    except mysql.connector.Error as error:
+        st.error(f"Error: {error}")
+        return False
+
+    finally:
+        # Close the cursor and database connection
+        if 'connection' in locals() and connection.is_connected():
+            cursor.close()
+            connection.close()
+
+# Define your login function
+def login():
+    st.header("Login Page")
+    # Add your login code here
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        # Authenticate user with provided credentials
+        if authenticate_user(username, password):
+            st.session_state.logged_in = True
+            st.success("Login successful!")
+            # Clear current content and display dashboard content
+            st.experimental_rerun()
+        else:
+            st.error("Invalid username or password")
+
+# Define your registration function
+def register():
+    st.header("Registration Page")
+    # Add your registration code here
+    new_username = st.text_input("New Username")
+    new_email = st.text_input("Email Address")
+    new_password = st.text_input("New Password", type="password")
+    confirm_password = st.text_input("Confirm Password", type="password")
+    if st.button("Register"):
+        # Check if the username already exists
+        if username_exists(new_username):
+            st.error("Username already exists. Please choose a different username.")
+        else:
+            # Add your registration logic here (inserting new user into the database)
+            st.success("Registration successful!")
+            st.experimental_rerun()
+
+# Define function to show dashboard content
+def show_dashboard():
+    st.header("Dashboard")
+    # Add your content here
+    st.write("Welcome to the dashboard!")
+    # You can add more content or functionality here
+
+# Main Streamlit app
+def main():
+    ##Give title to the app
+    st.title("This is my app")
+
+    # Sidebar navigation
+    page = st.sidebar.radio("Navigation", ["Login", "Register", "Dashboard"])
+
+    # Check if user is logged in
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+
+    # Show login page if user is not logged in
+    if not st.session_state.logged_in:
+        if page == "Login":
+            login()
+
+    # Show registration page if selected in the sidebar
+    if page == "Register":
+        register()
+
+    # Show dashboard if selected in the sidebar and user is logged in
+    if page == "Dashboard" and st.session_state.logged_in:
+        show_dashboard()
+
+# Run the main app
+if __name__ == "__main__":
+    main()
